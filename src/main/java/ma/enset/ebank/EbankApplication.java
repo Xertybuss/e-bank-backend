@@ -1,5 +1,9 @@
 package ma.enset.ebank;
 
+import ma.enset.ebank.dtos.BankAccountDTO;
+import ma.enset.ebank.dtos.CurrentBankAccountDTO;
+import ma.enset.ebank.dtos.CustomerDTO;
+import ma.enset.ebank.dtos.SavingBankAccountDTO;
 import ma.enset.ebank.entities.*;
 import ma.enset.ebank.enums.AccountStatus;
 import ma.enset.ebank.enums.OperationType;
@@ -32,7 +36,7 @@ public class EbankApplication {
     CommandLineRunner commandLineRunner(BankAccountService bankAccountService) {
         return args -> {
             Stream.of("Hassan", "Imane", "Mohammed").forEach(name -> {
-                Customer customer = new Customer();
+                CustomerDTO customer = new CustomerDTO();
                 customer.setName(name);
                 customer.setEmail(name + "@email.com");
                 bankAccountService.saveCustomer(customer);
@@ -41,11 +45,17 @@ public class EbankApplication {
                 try {
                     bankAccountService.saveCurrentBankAccount(Math.random() * 90000, 9000, customer.getId());
                     bankAccountService.saveSavingBankAccount(Math.random() * 120000, 5.5, customer.getId());
-                    List<BankAccount> bankAccounts = bankAccountService.bankAccountList();
-                    for(BankAccount bankAccount : bankAccounts) {
+                    List<BankAccountDTO> bankAccounts = bankAccountService.bankAccountList();
+                    for(BankAccountDTO bankAccount : bankAccounts) {
                         for(int i = 0; i < 10; i++){
-                            bankAccountService.credit(bankAccount.getId(), 10000+Math.random()*120000, "Credit");
-                            bankAccountService.debit(bankAccount.getId(), 1000+Math.random()*9000, "Debit");
+                            String accountId;
+                            if(bankAccount instanceof SavingBankAccountDTO){
+                                 accountId=((SavingBankAccountDTO) bankAccount).getId();
+                            }else {
+                                accountId = ((CurrentBankAccountDTO) bankAccount).getId();
+                            }
+                            bankAccountService.credit(accountId, 10000+Math.random()*120000, "Credit");
+                            bankAccountService.debit(accountId, 1000+Math.random()*9000, "Debit");
                         }
                     }
                 } catch (CustomerNotFoundException e) {
